@@ -17,7 +17,16 @@ function M.node_comparator(a, b)
     return false
   end
 
-  return a.name:lower() <= b.name:lower()
+  if M.config.sort_by == "modification_time" then
+      -- newer files have higher mtime
+      local a_mtime = uv.fs_stat(a.absolute_path, nil).mtime.sec
+      local b_mtime = uv.fs_stat(b.absolute_path, nil).mtime.sec
+      return b_mtime <= a_mtime
+  elseif M.config.sort_by == "name" then
+    return a.name:lower() <= b.name:lower()
+  else
+    return a.name:lower() <= b.name:lower()
+  end
 end
 
 ---Check if the given path should be ignored.
@@ -73,6 +82,7 @@ function M.setup(opts)
     filter_ignored = true,
     filter_dotfiles = opts.filters.dotfiles,
     filter_git_ignored = opts.git.ignore,
+    sort_by = opts.sort_by,
   }
 
   M.exclude_list = opts.filters.exclude
