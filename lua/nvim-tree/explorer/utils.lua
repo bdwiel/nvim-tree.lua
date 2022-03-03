@@ -32,7 +32,7 @@ function M.node_comparator_modification_time(a, b)
   end
 
   -- newer files have higher mtime
-  print('Comparing ' .. a.name .. ' and ' .. b.name)
+  print('Comparing ' .. a.name .. ' and ' .. b.name .. '. ' .. a.last_modified .. ' ' .. b.last_modified)
   return b.last_modified <= a.last_modified
 end
 
