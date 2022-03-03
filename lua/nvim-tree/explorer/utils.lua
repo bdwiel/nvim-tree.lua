@@ -5,9 +5,10 @@ local utils = require'nvim-tree.utils'
 local M = {
   ignore_list = {},
   exclude_list = {},
+  node_comparator = nil,
 }
 
-function M.node_comparator(a, b)
+function M.node_comparator_name(a, b)
   if not (a and b) then
     return true
   end
@@ -17,16 +18,22 @@ function M.node_comparator(a, b)
     return false
   end
 
-  if M.config.sort_by == "modification_time" then
-      -- newer files have higher mtime
-      local a_mtime = uv.fs_stat(a.absolute_path, nil).mtime.sec
-      local b_mtime = uv.fs_stat(b.absolute_path, nil).mtime.sec
-      return b_mtime <= a_mtime
-  elseif M.config.sort_by == "name" then
-    return a.name:lower() <= b.name:lower()
-  else
-    return a.name:lower() <= b.name:lower()
+  return a.name:lower() <= b.name:lower()
+end
+
+function M.node_comparator_modification_time(a, b)
+  if not (a and b) then
+    return true
   end
+  if a.nodes and not b.nodes then
+    return true
+  elseif not a.nodes and b.nodes then
+    return false
+  end
+
+  -- newer files have higher mtime
+  print('Comparing ' .. a.name .. ' and ' .. b.name)
+  return b.last_modified <= a.last_modified
 end
 
 ---Check if the given path should be ignored.
@@ -92,6 +99,12 @@ function M.setup(opts)
     for _, filter_name in pairs(custom_filter) do
       M.ignore_list[filter_name] = true
     end
+  end
+
+  if M.config.sort_by == "modification_time" then
+    M.node_comparator = M.node_comparator_modification_time
+  else
+    M.node_comparator = M.node_comparator_name
   end
 end
 

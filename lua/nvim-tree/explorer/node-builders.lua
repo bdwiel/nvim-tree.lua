@@ -21,6 +21,12 @@ end
 function M.folder(absolute_path, name, status, parent_ignored)
   local handle = uv.fs_scandir(absolute_path)
   local has_children = handle and uv.fs_scandir_next(handle) ~= nil
+  local stat = uv.fs_stat(absolute_path)
+
+  local last_modified = 0
+  if stat ~= nil then
+    last_modified = stat.mtime.sec
+  end
 
   return {
     absolute_path = absolute_path,
@@ -30,6 +36,7 @@ function M.folder(absolute_path, name, status, parent_ignored)
     name = name,
     nodes = {},
     open = false,
+    last_modified = last_modified,
   }
 end
 
@@ -42,6 +49,12 @@ end
 
 function M.file(absolute_path, name, status, parent_ignored)
   local ext = string.match(name, ".?[^.]+%.(.*)") or ""
+  local stat = uv.fs_stat(absolute_path)
+
+  local last_modified = 0
+  if stat ~= nil then
+    last_modified = stat.mtime.sec
+  end
 
   return {
     absolute_path = absolute_path,
@@ -49,6 +62,7 @@ function M.file(absolute_path, name, status, parent_ignored)
     extension = ext,
     git_status = M.get_git_status(parent_ignored, status, absolute_path),
     name = name,
+    last_modified = last_modified,
   }
 end
 
